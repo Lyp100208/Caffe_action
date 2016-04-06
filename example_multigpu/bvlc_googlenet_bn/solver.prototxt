@@ -1,0 +1,14 @@
+net: "train_val.prototxt"
+test_iter: 625
+test_interval: 1000
+test_initialization: false
+display: 40 
+average_loss: 20
+base_lr: 0.05
+lr_policy: "fixed"
+max_iter: 400000
+momentum: 0.9
+weight_decay: 0.0002
+snapshot: 1000
+snapshot_prefix: "googlenet_bn"
+solver_mode: GPU

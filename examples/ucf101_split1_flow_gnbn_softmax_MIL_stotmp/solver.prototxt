@@ -1,0 +1,17 @@
+net: "train_val_gnbn_bincls_stotmp.prototxt"
+test_iter: 39
+test_interval:1000
+test_initialization: false
+display: 20
+average_loss: 20
+base_lr: 0.0005
+lr_policy: "multistep"
+stepvalue: 12000
+stepvalue: 20000
+max_iter:  25000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 1000
+snapshot_prefix: ""
+solver_mode: GPU
+

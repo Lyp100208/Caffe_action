@@ -1,0 +1,41 @@
+layer {
+  name: "datalayer"
+  type: "FileData"
+  top: "data"
+  video_data_param {
+    ########## batch size ########
+    batch_size: 200
+    num_segments: 25
+    num_views: 10
+    tot_views: 10
+
+    ###### sequence feature ######
+    seq_length: 1
+    stride_tmp: 1
+    do_rolling: false
+    do_squeeze: true
+
+    ###### file list #############
+    shuffle: false
+    root_folder: "./fea_vid"
+    source: "/data1/wangjiang/datasets/ucf101_list/test_list_split1.txt"
+  }
+  include: { phase: TEST }
+}
+
+layer {
+  name: "loss3/classifier_finetune"
+  type: "InnerProduct"
+  bottom: "data"
+  top: "fc"
+  inner_product_param {
+    num_output: 101
+  }
+}
+
+layer {
+  name: "loss"
+  type: "Softmax"
+  bottom: "fc"
+  top: "prob"
+}
