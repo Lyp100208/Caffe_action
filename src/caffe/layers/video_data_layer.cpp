@@ -33,7 +33,7 @@ void VideoDataLayer<Dtype>:: DataLayerSetUp(const vector<Blob<Dtype>*>& bottom, 
 	const int num_segments = this->layer_param_.video_data_param().num_segments();
 	const string& source = this->layer_param_.video_data_param().source();
 	string root_folder = this->layer_param_.video_data_param().root_folder();
-	const bool flow_is_color = this->layer_param_.video_data_param().flow_is_color();
+	const bool is_color = this->layer_param_.video_data_param().is_color();
 	const string suffix = this->layer_param_.video_data_param().suffix();
 	LOG(INFO) << "Opening file: " << source;
 	std:: ifstream infile(source.c_str());
@@ -66,7 +66,7 @@ void VideoDataLayer<Dtype>:: DataLayerSetUp(const vector<Blob<Dtype>*>& bottom, 
 
     	vector<int> offsets(1,0);
 	if (this->layer_param_.video_data_param().modality() == VideoDataParameter_Modality_FLOW)
-		CHECK(ReadSegmentFlowToDatum(root_folder + lines_[lines_id_].first, lines_[lines_id_].second, offsets, new_height, new_width, new_length, &datum, flow_is_color));
+		CHECK(ReadSegmentFlowToDatum(root_folder + lines_[lines_id_].first, lines_[lines_id_].second, offsets, new_height, new_width, new_length, &datum, is_color));
 	else
 		CHECK(ReadSegmentRGBToDatum(root_folder + lines_[lines_id_].first, lines_[lines_id_].second, offsets, new_height, new_width, new_length, &datum, true, 0, suffix));
 	const int crop_size = this->layer_param_.transform_param().crop_size();
@@ -115,7 +115,7 @@ void VideoDataLayer<Dtype>::InternalThreadEntry(){
 	const int new_length = video_data_param.new_length();
 	const int num_segments = video_data_param.num_segments();
 	string root_folder = video_data_param.root_folder();
-	const bool flow_is_color = this->layer_param_.video_data_param().flow_is_color();
+	const bool is_color = this->layer_param_.video_data_param().is_color();
 	const int lines_size = lines_.size();
 
 	CHECK(lines_size >= batch_size) << "too small number of data, will cause problem in parallel reading";
@@ -156,7 +156,7 @@ void VideoDataLayer<Dtype>::InternalThreadEntry(){
 			}
 		}
 		if (this->layer_param_.video_data_param().modality() == VideoDataParameter_Modality_FLOW){
-			if(!ReadSegmentFlowToDatum(root_folder + lines_[lines_id_loc].first, lines_[lines_id_loc].second, offsets, new_height, new_width, new_length, &datum, flow_is_color, len_vid))
+			if(!ReadSegmentFlowToDatum(root_folder + lines_[lines_id_loc].first, lines_[lines_id_loc].second, offsets, new_height, new_width, new_length, &datum, is_color, len_vid))
 				continue;
 		} else{
 			if(!ReadSegmentRGBToDatum(root_folder + lines_[lines_id_loc].first, lines_[lines_id_loc].second, offsets, new_height, new_width, new_length, &datum, true, len_vid, suffix))
@@ -168,7 +168,7 @@ void VideoDataLayer<Dtype>::InternalThreadEntry(){
 		vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
 		transformed_data_loc.Reshape(top_shape);
 		transformed_data_loc.set_cpu_data(top_data + offset1);
-		const int chn_flow_single = flow_is_color ? 3 : 1;
+		const int chn_flow_single = is_color ? 3 : 1;
 
 		this->data_transformer_->Transform(datum, &(transformed_data_loc), chn_flow_single);
 

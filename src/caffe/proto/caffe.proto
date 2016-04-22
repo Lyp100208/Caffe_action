@@ -690,7 +690,7 @@ message VideoDataParameter{
   optional Strategy strategy = 113 [default = UNI];
   optional Modality modality = 13 [default = FLOW];
   optional string root_folder = 100 [default = ""];
-  optional bool flow_is_color = 101 [default = false];
+  optional bool is_color = 101 [default = false];
   optional uint32 num_views = 102 [default = 1];
   optional uint32 rep_label = 103 [default = 0];
   optional int32 stride_tmp = 104 [default = 0];
@@ -702,7 +702,7 @@ message VideoDataParameter{
   optional int32 stride_seq = 110 [default = 1];
   optional bool do_squeeze = 111 [default = false];
   optional string tube_folder_prefix = 112 [default = ""];
-  optional bool eval_last = 114 [default = false];
+  optional uint32 eval_num = 114 [default = 1];
   optional string suffix = 115 [default = "jpg"];
 }
 

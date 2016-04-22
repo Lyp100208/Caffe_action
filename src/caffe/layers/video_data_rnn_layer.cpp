@@ -37,7 +37,7 @@ void VideoDataRNNLayer<Dtype>:: DataLayerSetUp(const vector<Blob<Dtype>*>& botto
 	const string suffix = para.suffix();
 	const string& source = para.source();
 	string root_folder = para.root_folder();
-	const bool flow_is_color = para.flow_is_color();
+	const bool is_color = para.is_color();
 
 	LOG(INFO) << "Opening file: " << source;
 	std:: ifstream infile(source.c_str());
@@ -70,9 +70,9 @@ void VideoDataRNNLayer<Dtype>:: DataLayerSetUp(const vector<Blob<Dtype>*>& botto
 
     	vector<int> offsets(1,0);
 	if (para.modality() == VideoDataParameter_Modality_FLOW)
-		CHECK(ReadSegmentFlowToDatum(root_folder + lines_[lines_id_].first, lines_[lines_id_].second, offsets, new_height, new_width, new_length, &datum, flow_is_color));
+		CHECK(ReadSegmentFlowToDatum(root_folder + lines_[lines_id_].first, lines_[lines_id_].second, offsets, new_height, new_width, new_length, &datum, is_color));
 	else
-		CHECK(ReadSegmentRGBToDatum(root_folder + lines_[lines_id_].first, lines_[lines_id_].second, offsets, new_height, new_width, new_length, &datum, true, 0, suffix));
+		CHECK(ReadSegmentRGBToDatum(root_folder + lines_[lines_id_].first, lines_[lines_id_].second, offsets, new_height, new_width, new_length, &datum, is_color, 0, suffix));
 	const int crop_size = this->layer_param_.transform_param().crop_size();
 	int batch_size = para.batch_size();
 	CHECK(batch_size % thread_num == 0) << "batch_size % thread_num != 0";
@@ -126,8 +126,8 @@ void VideoDataRNNLayer<Dtype>::InternalThreadEntry(){
 	const int num_segments = para.num_segments();
 	const bool do_rolling = para.do_rolling();
 	const bool is_train = (this->phase_ == TRAIN);
-	const bool flow_is_color = para.flow_is_color();
-	const bool eval_last = para.eval_last();
+	const bool is_color = para.is_color();
+	const int eval_num = para.eval_num();
 	const string suffix = para.suffix();
 
 	const int thread_num = Caffe::getThreadNum();
@@ -184,33 +184,31 @@ void VideoDataRNNLayer<Dtype>::InternalThreadEntry(){
 				//read images
 				if (para.modality() == VideoDataParameter_Modality_FLOW)
 					CHECK(ReadSegmentFlowToDatum(root_folder + lines_[id_vid].first, lines_[id_vid].second,
-						 offsets, new_height, new_width, new_length, &datum, flow_is_color));
+						 offsets, new_height, new_width, new_length, &datum, is_color));
 				else
 					CHECK(ReadSegmentRGBToDatum(root_folder + lines_[id_vid].first, lines_[id_vid].second,
-						 offsets, new_height, new_width, new_length, &datum, true, 0, suffix));
+						 offsets, new_height, new_width, new_length, &datum, is_color, 0, suffix));
 
 				//do transformation
 				vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
 				transformed_data_loc.Reshape(top_shape);
 				transformed_data_loc.set_cpu_data(pdata + chn * (s + num_segments * (b + batch_size * t)));
-				const int chn_flow_single = flow_is_color ? 3 : 1;
+				const int chn_flow_single = is_color ? 3 : 1;
 				this->data_transformer_->Transform(datum, &(transformed_data_loc), chn_flow_single, preset_mirror);
 
 				//copy to data, be careful. The real size of top[0] is: T * batch_size * num_segments * (C * H * W)
 				CHECK_EQ(transformed_data_loc.count(), chn);
-				if(eval_last == false) {
+				if(seq_length - t > eval_num) {
 					//label
-					plabel[s + num_segments * (b + batch_size * t)] = label; //last element
+					plabel[s + num_segments * (b + batch_size * t)] = -1;
+				} else {
+					plabel[s + num_segments * (b + batch_size * t)] = label;
 				}
 				if(t == 0) {
 					pmarker[s + num_segments * (b + batch_size * t)] = -len;
 				} else {
 					pmarker[s + num_segments * (b + batch_size * t)] = 1;
 				}
-			}
-			if(eval_last == true) {
-				//label
-				plabel[s + num_segments * (b + batch_size * (len-1))] = label; //last element
 			}
 			//sequence real length
 			//preal_size[s + num_segments * b] = len;
