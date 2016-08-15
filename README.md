@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Caffe
 
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
@@ -32,3 +33,6 @@ Please cite Caffe in your publications if it helps your research:
       Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
       Year = {2014}
     }
+=======
+# Caffe_action
+>>>>>>> cb1445a82f90e13833ad14075b4a7e1f7983dc6d
